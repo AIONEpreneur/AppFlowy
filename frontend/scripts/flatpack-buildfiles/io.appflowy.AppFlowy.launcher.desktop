@@ -1,5 +1,5 @@
 [Desktop Entry]
 Type=Application
-Name=AppFlowy Launcher
+Name=AIONE Flow Launcher
 Exec=launcher.sh %u
 MimeType=x-scheme-handler/appflowy-flutter;

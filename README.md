@@ -1,4 +1,17 @@
 <h1 align="center" style="border-bottom: none">
+    <b>AIONE Flow</b><br>
+    ⭐️  Dein Open-Source-Workspace — die Notion-Alternative  ⭐️ <br>
+</h1>
+
+<p align="center">
+<b>AIONE Flow</b> ist ein Rebranding-Fork von <a href="https://github.com/AppFlowy-IO/AppFlowy">AppFlowy</a>
+mit Deutsch als Standardsprache. Lizenz: AGPL-3.0 (wie das Original).
+Das originale AppFlowy-README folgt unten.
+</p>
+
+<hr>
+
+<h1 align="center" style="border-bottom: none">
     <b>
         <a href="https://www.appflowy.com">AppFlowy</a><br>
     </b>

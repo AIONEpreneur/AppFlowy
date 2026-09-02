@@ -1,15 +1,15 @@
 [Setup]
-AppName=AppFlowy
+AppName=AIONE Flow
 AppVersion={#AppVersion}
 AppPublisher=AppFlowy-IO
 WizardStyle=modern
 Compression=lzma2
 SolidCompression=yes
 DefaultDirName={autopf}\AppFlowy\
-DefaultGroupName=AppFlowy
+DefaultGroupName=AIONE Flow
 SetupIconFile=flowy_logo.ico
 UninstallDisplayIcon={app}\AppFlowy.exe
-UninstallDisplayName=AppFlowy
+UninstallDisplayName=AIONE Flow
 VersionInfoVersion={#AppVersion}
 UsePreviousAppDir=no
 
@@ -19,8 +19,8 @@ Source: "AppFlowy\*";DestDir: "{app}"
 Source: "AppFlowy\data\*";DestDir: "{app}\data\"; Flags: recursesubdirs
 
 [Icons]
-Name: "{userdesktop}\AppFlowy"; Filename: "{app}\AppFlowy.exe"
-Name: "{group}\AppFlowy"; Filename: "{app}\AppFlowy.exe"
+Name: "{userdesktop}\AIONE Flow"; Filename: "{app}\AppFlowy.exe"
+Name: "{group}\AIONE Flow"; Filename: "{app}\AppFlowy.exe"
 
 [Registry]
 Root: HKCR; Subkey: "AppFlowy"; ValueType: "string"; ValueData: "URL:Custom Protocol"; Flags: uninsdeletekey
