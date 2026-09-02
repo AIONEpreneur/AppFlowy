@@ -109,6 +109,9 @@ class InitAppWidgetTask extends LaunchTask {
           Locale('mr', 'IN'),
         ],
         path: 'assets/translations',
+        // German is the default language on first launch; untranslated keys
+        // fall back to English.
+        startLocale: const Locale('de', 'DE'),
         fallbackLocale: const Locale('en', 'US'),
         useFallbackTranslations: true,
         child: Builder(

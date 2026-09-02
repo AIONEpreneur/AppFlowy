@@ -262,12 +262,13 @@ class AppearanceSettingsCubit extends Cubit<AppearanceSettingsState> {
   }
 
   /// Called when the application launches.
-  /// Uses the device locale when the application is opened for the first time.
+  /// German (de-DE) is the default locale on first launch; users can switch
+  /// languages in the settings afterwards.
   void readLocaleWhenAppLaunch(BuildContext context) {
     if (_appearanceSettings.resetToDefault) {
       _appearanceSettings.resetToDefault = false;
       _saveAppearanceSettings();
-      setLocale(context, context.deviceLocale);
+      setLocale(context, const Locale('de', 'DE'));
       return;
     }
 

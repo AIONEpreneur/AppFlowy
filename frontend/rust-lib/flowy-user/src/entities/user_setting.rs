@@ -112,8 +112,8 @@ pub struct LocaleSettingsPB {
 impl std::default::Default for LocaleSettingsPB {
   fn default() -> Self {
     Self {
-      language_code: "en".to_owned(),
-      country_code: "".to_owned(),
+      language_code: "de".to_owned(),
+      country_code: "DE".to_owned(),
     }
   }
 }
