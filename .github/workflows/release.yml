@@ -1,5 +1,8 @@
 name: release
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -468,6 +471,7 @@ jobs:
 
   build-for-docker:
     runs-on: ubuntu-latest
+    if: github.repository == 'AppFlowy-IO/AppFlowy'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -498,7 +502,7 @@ jobs:
       - build-for-macOS-x86_64
       - build-for-windows
       - build-for-linux
-    if: failure()
+    if: failure() && github.repository == 'AppFlowy-IO/AppFlowy'
     steps:
       - uses: 8398a7/action-slack@v3
         with:
@@ -512,6 +516,7 @@ jobs:
 
   notify-discord:
     runs-on: ubuntu-latest
+    if: github.repository == 'AppFlowy-IO/AppFlowy'
     needs:
       [
         build-for-linux,
