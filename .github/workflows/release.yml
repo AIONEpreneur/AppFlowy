@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (used as tag and app version)"
+        required: true
 
 env:
   FLUTTER_VERSION: "3.27.4"
@@ -23,7 +28,7 @@ jobs:
       - name: Build release notes
         run: |
           touch ${{ env.RELEASE_NOTES_PATH }}
-          cat CHANGELOG.md | sed -e '/./{H;$!d;}' -e "x;/##\ Version\ ${{ github.ref_name }}/"'!d;' >> ${{ env.RELEASE_NOTES_PATH }}
+          cat CHANGELOG.md | sed -e '/./{H;$!d;}' -e "x;/##\ Version\ ${{ inputs.version || github.ref_name }}/"'!d;' >> ${{ env.RELEASE_NOTES_PATH }}
 
       - name: Create release
         id: create_release
@@ -31,8 +36,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: v${{ github.ref }}
+          tag_name: ${{ inputs.version || github.ref }}
+          release_name: v${{ inputs.version || github.ref }}
           body_path: ${{ env.RELEASE_NOTES_PATH }}
 
   # the package name should be with the format: AppFlowy-<version>-<os>-<arch>
@@ -41,9 +46,9 @@ jobs:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     needs: create-release
     env:
-      WINDOWS_APP_RELEASE_PATH: frontend\appflowy_flutter\product\${{ github.ref_name }}\windows
-      WINDOWS_ZIP_NAME: AppFlowy-${{ github.ref_name }}-windows-x86_64.zip
-      WINDOWS_INSTALLER_NAME: AppFlowy-${{ github.ref_name }}-windows-x86_64
+      WINDOWS_APP_RELEASE_PATH: frontend\appflowy_flutter\product\${{ inputs.version || github.ref_name }}\windows
+      WINDOWS_ZIP_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-windows-x86_64.zip
+      WINDOWS_INSTALLER_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-windows-x86_64
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false
@@ -81,9 +86,9 @@ jobs:
         # the cargo make script has to be run separately because of file locking issues
         run: |
           flutter config --enable-windows-desktop
-          dart ./scripts/flutter_release_build/build_flowy.dart exclude-directives . ${{ github.ref_name }}
-          cargo make --env APP_VERSION=${{ github.ref_name }} --profile production-windows-x86 appflowy
-          dart ./scripts/flutter_release_build/build_flowy.dart include-directives . ${{ github.ref_name }}
+          dart ./scripts/flutter_release_build/build_flowy.dart exclude-directives . ${{ inputs.version || github.ref_name }}
+          cargo make --env APP_VERSION=${{ inputs.version || github.ref_name }} --profile production-windows-x86 appflowy
+          dart ./scripts/flutter_release_build/build_flowy.dart include-directives . ${{ inputs.version || github.ref_name }}
 
       - name: Archive Asset
         uses: vimtor/action-zip@v1
@@ -99,7 +104,7 @@ jobs:
       - name: Build installer executable
         working-directory: ${{ env.WINDOWS_APP_RELEASE_PATH }}
         run: |
-          iscc /F${{ env.WINDOWS_INSTALLER_NAME }} inno_setup_config.iss /DAppVersion=${{ github.ref_name }}
+          iscc /F${{ env.WINDOWS_INSTALLER_NAME }} inno_setup_config.iss /DAppVersion=${{ inputs.version || github.ref_name }}
 
       - name: Upload Asset
         id: upload-release-asset
@@ -128,9 +133,9 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     needs: create-release
     env:
-      MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ github.ref_name }}/macos/Release
-      MACOS_X86_ZIP_NAME: AppFlowy-${{ github.ref_name }}-macos-x86_64.zip
-      MACOS_DMG_NAME: AppFlowy-${{ github.ref_name }}-macos-x86_64
+      MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ inputs.version || github.ref_name }}/macos/Release
+      MACOS_X86_ZIP_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-macos-x86_64.zip
+      MACOS_DMG_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-macos-x86_64
     strategy:
       fail-fast: false
       matrix:
@@ -165,7 +170,7 @@ jobs:
         working-directory: frontend
         run: |
           flutter config --enable-macos-desktop
-          dart ./scripts/flutter_release_build/build_flowy.dart run . ${{ github.ref_name }}
+          dart ./scripts/flutter_release_build/build_flowy.dart run . ${{ inputs.version || github.ref_name }}
 
       - name: Codesign AppFlowy
         run: |
@@ -231,9 +236,9 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     needs: create-release
     env:
-      MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ github.ref_name }}/macos/Release
-      MACOS_AARCH64_ZIP_NAME: AppFlowy-${{ github.ref_name }}-macos-universal.zip
-      MACOS_DMG_NAME: AppFlowy-${{ github.ref_name }}-macos-universal
+      MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ inputs.version || github.ref_name }}/macos/Release
+      MACOS_AARCH64_ZIP_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-macos-universal.zip
+      MACOS_DMG_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-macos-universal
     strategy:
       fail-fast: false
       matrix:
@@ -270,7 +275,7 @@ jobs:
         working-directory: frontend
         run: |
           flutter config --enable-macos-desktop
-          sh scripts/flutter_release_build/build_universal_package_for_macos.sh ${{ github.ref_name }}
+          sh scripts/flutter_release_build/build_universal_package_for_macos.sh ${{ inputs.version || github.ref_name }}
 
       - name: Codesign AppFlowy
         run: |
@@ -329,14 +334,14 @@ jobs:
     runs-on: ${{ matrix.job.os }}
     needs: create-release
     env:
-      LINUX_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ github.ref_name }}/linux/Release
+      LINUX_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ inputs.version || github.ref_name }}/linux/Release
       LINUX_ZIP_NAME: AppFlowy-${{ matrix.job.target }}-x86_64.tar.gz
-      LINUX_PACKAGE_DEB_NAME: AppFlowy-${{ github.ref_name }}-linux-x86_64.deb
-      LINUX_PACKAGE_RPM_NAME: AppFlowy-${{ github.ref_name }}-linux-x86_64.rpm
-      LINUX_PACKAGE_TMP_RPM_NAME: AppFlowy-${{ github.ref_name }}-2.x86_64.rpm
-      LINUX_PACKAGE_TMP_APPIMAGE_NAME: AppFlowy-${{ github.ref_name }}-x86_64.AppImage
-      LINUX_PACKAGE_APPIMAGE_NAME: AppFlowy-${{ github.ref_name }}-linux-x86_64.AppImage
-      LINUX_PACKAGE_ZIP_NAME: AppFlowy-${{ github.ref_name }}-linux-x86_64.tar.gz
+      LINUX_PACKAGE_DEB_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-linux-x86_64.deb
+      LINUX_PACKAGE_RPM_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-linux-x86_64.rpm
+      LINUX_PACKAGE_TMP_RPM_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-2.x86_64.rpm
+      LINUX_PACKAGE_TMP_APPIMAGE_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-x86_64.AppImage
+      LINUX_PACKAGE_APPIMAGE_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-linux-x86_64.AppImage
+      LINUX_PACKAGE_ZIP_NAME: AppFlowy-${{ inputs.version || github.ref_name }}-linux-x86_64.tar.gz
 
     strategy:
       fail-fast: false
@@ -392,7 +397,7 @@ jobs:
         working-directory: frontend
         run: |
           flutter config --enable-linux-desktop
-          dart ./scripts/flutter_release_build/build_flowy.dart run . ${{ github.ref_name }}
+          dart ./scripts/flutter_release_build/build_flowy.dart run . ${{ inputs.version || github.ref_name }}
 
       - name: Archive Asset
         working-directory: ${{ env.LINUX_APP_RELEASE_PATH }}
@@ -401,7 +406,7 @@ jobs:
       - name: Build Linux package (.deb)
         working-directory: frontend
         run: |
-          sh scripts/linux_distribution/deb/build_deb.sh appflowy_flutter/product/${{ github.ref_name }}/linux/Release ${{ github.ref_name }} ${{ env.LINUX_PACKAGE_DEB_NAME }}
+          sh scripts/linux_distribution/deb/build_deb.sh appflowy_flutter/product/${{ inputs.version || github.ref_name }}/linux/Release ${{ inputs.version || github.ref_name }} ${{ env.LINUX_PACKAGE_DEB_NAME }}
 
       - name: Build Linux package (.rpm)
         working-directory: ${{ env.LINUX_APP_RELEASE_PATH }}
@@ -413,7 +418,7 @@ jobs:
         working-directory: frontend
         continue-on-error: true
         run: |
-          sh scripts/linux_distribution/appimage/build_appimage.sh ${{ github.ref_name }}
+          sh scripts/linux_distribution/appimage/build_appimage.sh ${{ inputs.version || github.ref_name }}
           cd ..
           cp -r frontend/${{ env.LINUX_PACKAGE_TMP_APPIMAGE_NAME }} ${{ env.LINUX_APP_RELEASE_PATH }}/${{ env.LINUX_PACKAGE_APPIMAGE_NAME }}
 
@@ -483,7 +488,7 @@ jobs:
           file: ./frontend/scripts/docker-buildfiles/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/appflowy_client:${{ github.ref_name }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/appflowy_client:${{ inputs.version || github.ref_name }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/af_build_cache:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/af_build_cache:buildcache,mode=max
 
@@ -517,5 +522,5 @@ jobs:
     steps:
       - name: Notify Discord
         run: |
-          curl -H "Content-Type: application/json" -d '{"username": "release@appflowy", "content": "🎉 AppFlowy ${{ github.ref_name }} is available. https://github.com/AppFlowy-IO/AppFlowy/releases/tag/'${{ github.ref_name }}'"}' "https://discord.com/api/webhooks/${{ secrets.DISCORD }}"
+          curl -H "Content-Type: application/json" -d '{"username": "release@appflowy", "content": "🎉 AppFlowy ${{ inputs.version || github.ref_name }} is available. https://github.com/AppFlowy-IO/AppFlowy/releases/tag/'${{ inputs.version || github.ref_name }}'"}' "https://discord.com/api/webhooks/${{ secrets.DISCORD }}"
         shell: bash
