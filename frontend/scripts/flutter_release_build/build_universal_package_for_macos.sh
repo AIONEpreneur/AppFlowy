@@ -1,5 +1,13 @@
 # build the universal binary for AppFlowy on macOS
 
+# fail fast: without this, a failed architecture build used to surface only
+# much later as an arm64-only libdart_ffi.a at Xcode link time
+set -e
+
+# rust-toolchain.toml may resolve to a toolchain that rustup auto-installed
+# with the host target only; the universal build needs both targets
+rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
 echo '🚀 ---------------------------------------------------'
 echo '🚀 building libdart_ffi.a(x86_64) for AppFlowy on macOS'
 cargo make --profile production-mac-x86_64 appflowy-core-release
