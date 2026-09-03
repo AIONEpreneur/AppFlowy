@@ -1,0 +1,78 @@
+name: macos-release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build; the release with this tag must already exist"
+        required: true
+
+env:
+  FLUTTER_VERSION: "3.27.4"
+  RUST_TOOLCHAIN: "1.85.0"
+
+jobs:
+  build-macos-universal:
+    runs-on: macos-14
+    env:
+      MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ inputs.version }}/macos/Release
+      MACOS_ZIP_NAME: AppFlowy-${{ inputs.version }}-macos-universal.zip
+      MACOS_DMG_NAME: AppFlowy-${{ inputs.version }}-macos-universal
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Install flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: "aarch64-apple-darwin,x86_64-apple-darwin"
+          components: rustfmt
+
+      - name: Install prerequisites
+        working-directory: frontend
+        run: |
+          cargo install --force --locked cargo-make
+          cargo install --force --locked duckscript_cli
+
+      - name: Build AppFlowy
+        working-directory: frontend
+        run: |
+          flutter config --enable-macos-desktop
+          sh scripts/flutter_release_build/build_universal_package_for_macos.sh ${{ inputs.version }}
+
+      - name: Create macOS dmg
+        run: |
+          brew install create-dmg
+          create-dmg \
+          --volname ${{ env.MACOS_DMG_NAME }} \
+          --hide-extension "AppFlowy.app" \
+          --background frontend/scripts/dmg_assets/AppFlowyInstallerBackground.jpg \
+          --window-size 600 450 \
+          --icon-size 94 \
+          --icon "AppFlowy.app" 141 249 \
+          --app-drop-link 458 249 \
+          "${{ env.MACOS_APP_RELEASE_PATH }}/${{ env.MACOS_DMG_NAME }}.dmg" \
+          "${{ env.MACOS_APP_RELEASE_PATH }}/AppFlowy.app"
+
+      - name: Archive Asset
+        working-directory: ${{ env.MACOS_APP_RELEASE_PATH }}
+        run: zip --symlinks -qr ${{ env.MACOS_ZIP_NAME }} AppFlowy.app
+
+      - name: Upload Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ inputs.version }}" \
+            "${{ env.MACOS_APP_RELEASE_PATH }}/${{ env.MACOS_ZIP_NAME }}" \
+            "${{ env.MACOS_APP_RELEASE_PATH }}/${{ env.MACOS_DMG_NAME }}.dmg" \
+            --clobber
