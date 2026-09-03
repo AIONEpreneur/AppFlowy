@@ -57,7 +57,7 @@ jobs:
       fail-fast: false
       matrix:
         job:
-          - { target: x86_64-pc-windows-msvc, os: windows-2019 }
+          - { target: x86_64-pc-windows-msvc, os: windows-2022 }
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -134,6 +134,7 @@ jobs:
   build-for-macOS-x86_64:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-args }}]
     runs-on: ${{ matrix.job.os }}
+    if: github.repository == 'AppFlowy-IO/AppFlowy'
     needs: create-release
     env:
       MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ inputs.version || github.ref_name }}/macos/Release
@@ -237,6 +238,7 @@ jobs:
   build-for-macOS-universal:
     name: ${{ matrix.job.target }} (${{ matrix.job.os }}) [${{ matrix.job.extra-build-args }}]
     runs-on: ${{ matrix.job.os }}
+    if: github.repository == 'AppFlowy-IO/AppFlowy'
     needs: create-release
     env:
       MACOS_APP_RELEASE_PATH: frontend/appflowy_flutter/product/${{ inputs.version || github.ref_name }}/macos/Release
